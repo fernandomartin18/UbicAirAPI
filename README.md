@@ -1,7 +1,3 @@
-Perfecto ✅ Aquí tienes tu **README.md** actualizado, con la nueva sección de **API de Usuarios** integrada de forma coherente, estructurada y visualmente uniforme con el estilo original:
-
----
-
 # UbicAir API
 
 API RESTful para la gestión de **vuelos** y **usuarios** dentro del ecosistema **UbicAir**.
