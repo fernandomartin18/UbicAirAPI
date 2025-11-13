@@ -189,6 +189,11 @@ class UserService {
         throw new Error('La nueva contraseña debe tener al menos 6 caracteres');
       }
 
+      // Validar que la nueva contraseña sea diferente a la actual
+      if (passwordActual === passwordNueva) {
+        throw new Error('La nueva contraseña debe ser diferente a la actual');
+      }
+
       // Actualizar contraseña (se encriptará automáticamente por el middleware pre-save)
       usuario.password = passwordNueva;
       await usuario.save();
