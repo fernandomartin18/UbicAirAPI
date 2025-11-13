@@ -166,6 +166,65 @@ class UserService {
       throw new Error(`Error al validar credenciales: ${error.message}`);
     }
   }
+
+  /**
+   * Cambiar contraseña de usuario
+   */
+  async cambiarPassword(id, passwordActual, passwordNueva) {
+    try {
+      // Obtener usuario con contraseña
+      const usuario = await User.findById(id);
+      if (!usuario) {
+        throw new Error('Usuario no encontrado');
+      }
+
+      // Verificar que la contraseña actual sea correcta
+      const passwordValida = await usuario.compararPassword(passwordActual);
+      if (!passwordValida) {
+        throw new Error('La contraseña actual es incorrecta');
+      }
+
+      // Validar que la nueva contraseña cumpla con los requisitos
+      if (!passwordNueva || passwordNueva.length < 6) {
+        throw new Error('La nueva contraseña debe tener al menos 6 caracteres');
+      }
+
+      // Actualizar contraseña (se encriptará automáticamente por el middleware pre-save)
+      usuario.password = passwordNueva;
+      await usuario.save();
+
+      return { mensaje: 'Contraseña actualizada correctamente' };
+    } catch (error) {
+      throw new Error(`Error al cambiar contraseña: ${error.message}`);
+    }
+  }
+
+  /**
+   * Actualizar foto de perfil del usuario
+   */
+  async actualizarFotoPerfil(id, urlFoto) {
+    try {
+      // Validar que se proporcione una URL
+      if (!urlFoto || typeof urlFoto !== 'string') {
+        throw new Error('Se debe proporcionar una URL válida para la foto de perfil');
+      }
+
+      // Actualizar foto de perfil
+      const usuario = await User.findByIdAndUpdate(
+        id,
+        { $set: { fotoPerfil: urlFoto } },
+        { new: true, runValidators: true }
+      ).select('-password');
+
+      if (!usuario) {
+        throw new Error('Usuario no encontrado');
+      }
+
+      return usuario;
+    } catch (error) {
+      throw new Error(`Error al actualizar foto de perfil: ${error.message}`);
+    }
+  }
 }
 
 module.exports = new UserService();

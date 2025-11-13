@@ -25,4 +25,10 @@ router.put('/:id', verificarToken, userController.actualizarUsuario.bind(userCon
 // DELETE /api/users/:id - Eliminar un usuario - Protegida
 router.delete('/:id', verificarToken, userController.eliminarUsuario.bind(userController));
 
+// PUT /api/users/:id/password - Cambiar contraseña - Protegida
+router.put('/:id/password', verificarToken, userController.cambiarPassword.bind(userController));
+
+// PUT /api/users/:id/foto-perfil - Actualizar foto de perfil - Protegida
+router.put('/:id/foto-perfil', verificarToken, userController.actualizarFotoPerfil.bind(userController));
+
 module.exports = router;

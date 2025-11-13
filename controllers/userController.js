@@ -160,6 +160,97 @@ class UserController {
       });
     }
   }
+
+  /**
+   * PUT /api/users/:id/password
+   * Cambiar contraseña de un usuario
+   */
+  async cambiarPassword(req, res) {
+    try {
+      const { passwordActual, passwordNueva } = req.body;
+
+      // Validar que se proporcionen ambas contraseñas
+      if (!passwordActual || !passwordNueva) {
+        return res.status(400).json({
+          success: false,
+          error: 'Se requieren la contraseña actual y la nueva contraseña'
+        });
+      }
+
+      // Verificar que el usuario solo pueda cambiar su propia contraseña
+      if (req.user.id !== req.params.id) {
+        return res.status(403).json({
+          success: false,
+          error: 'No tienes permisos para cambiar la contraseña de otro usuario'
+        });
+      }
+
+      const resultado = await userService.cambiarPassword(
+        req.params.id,
+        passwordActual,
+        passwordNueva
+      );
+
+      res.status(200).json({
+        success: true,
+        message: resultado.mensaje
+      });
+    } catch (error) {
+      if (error.message.includes('incorrecta')) {
+        return res.status(401).json({
+          success: false,
+          error: error.message
+        });
+      }
+
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * PUT /api/users/:id/foto-perfil
+   * Actualizar foto de perfil de un usuario
+   */
+  async actualizarFotoPerfil(req, res) {
+    try {
+      const { fotoPerfil } = req.body;
+
+      // Validar que se proporcione la URL de la foto
+      if (!fotoPerfil) {
+        return res.status(400).json({
+          success: false,
+          error: 'Se requiere la URL de la foto de perfil'
+        });
+      }
+
+      // Verificar que el usuario solo pueda cambiar su propia foto
+      if (req.user.id !== req.params.id) {
+        return res.status(403).json({
+          success: false,
+          error: 'No tienes permisos para cambiar la foto de otro usuario'
+        });
+      }
+
+      const usuario = await userService.actualizarFotoPerfil(
+        req.params.id,
+        fotoPerfil
+      );
+
+      res.status(200).json({
+        success: true,
+        message: 'Foto de perfil actualizada correctamente',
+        data: usuario
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
 }
 
 module.exports = new UserController();
