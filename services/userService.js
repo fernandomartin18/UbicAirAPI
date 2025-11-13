@@ -198,12 +198,7 @@ class UserService {
       usuario.password = passwordNueva;
       await usuario.save();
 
-      // Devolver usuario sin contraseña
-      const usuarioActualizado = await User.findById(id).select('-password');
-      return { 
-        mensaje: 'Contraseña actualizada correctamente',
-        usuario: usuarioActualizado
-      };
+      return { mensaje: 'Contraseña actualizada correctamente' };
     } catch (error) {
       throw new Error(`Error al cambiar contraseña: ${error.message}`);
     }
