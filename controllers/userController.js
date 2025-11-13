@@ -200,7 +200,8 @@ class UserController {
 
       res.status(200).json({
         success: true,
-        message: resultado.mensaje
+        message: resultado.mensaje,
+        data: resultado.usuario
       });
     } catch (error) {
       if (error.message.includes('incorrecta')) {

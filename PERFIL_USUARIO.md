@@ -30,7 +30,16 @@ He ejecutado las pruebas y confirmado que:
 ```json
 {
   "success": true,
-  "message": "Contraseña actualizada correctamente"
+  "message": "Contraseña actualizada correctamente",
+  "data": {
+    "_id": "USER_ID",
+    "nombre": "Nombre Usuario",
+    "email": "email@ejemplo.com",
+    "fotoPerfil": "https://ejemplo.com/foto.jpg",
+    "fechaRegistro": "2025-11-06T15:10:12.374Z",
+    "createdAt": "2025-11-06T15:10:12.377Z",
+    "updatedAt": "2025-11-13T16:30:00.000Z"
+  }
 }
 ```
 
@@ -215,3 +224,5 @@ POST /api/users/login
 3. **Validación de URLs**: La API valida que se proporcione una string, pero no valida que sea una URL accesible. Considera agregar validación adicional en el frontend.
 
 4. **Contraseñas**: Se encriptan automáticamente usando bcrypt con salt de factor 10.
+
+5. **⭐ Importante - Actualización de Frontend**: Ambos endpoints (cambiar contraseña y actualizar foto) ahora devuelven el objeto `data` con el usuario completo actualizado. Asegúrate de actualizar el estado del usuario en el frontend con estos datos para mantener sincronizada la información (especialmente la foto de perfil).

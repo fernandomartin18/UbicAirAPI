@@ -5,7 +5,8 @@
   "scripts": {
     "start": "node ./bin/www",
     "migrate:users": "node scripts/migrateUsers.js",
-    "test:users": "node scripts/testUserFeatures.js"
+    "test:users": "node scripts/testUserFeatures.js",
+    "test:password": "node scripts/testPasswordResponse.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
