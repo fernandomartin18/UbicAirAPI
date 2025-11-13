@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const vueloController = require('../controllers/vueloController');
+const { verificarTokenOpcional } = require('../middlewares/auth');
 
 /**
  * @route   GET /api/vuelos
@@ -8,7 +9,7 @@ const vueloController = require('../controllers/vueloController');
  * @query   page, limit, origen, destino, aerolinea, fecha, retrasoMin
  * @access  Public
  */
-router.get('/', vueloController.obtenerVuelos);
+router.get('/', verificarTokenOpcional, vueloController.obtenerVuelos);
 
 /**
  * @route   GET /api/vuelos/estadisticas

@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const jwt = require('jsonwebtoken');
 
 /**
  * Servicio para manejar la lógica de negocio de usuarios
@@ -144,8 +145,23 @@ class UserService {
         throw new Error('Credenciales inválidas');
       }
 
-      // Devolver usuario sin contraseña
-      return usuario.toJSON();
+      // Generar token JWT
+      const token = jwt.sign(
+        { 
+          id: usuario._id, 
+          email: usuario.email,
+          nombre: usuario.nombre 
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: '24h' } // Token expira en 24 horas
+      );
+
+      // Devolver usuario sin contraseña y con token
+      const usuarioSinPassword = usuario.toJSON();
+      return {
+        ...usuarioSinPassword,
+        token
+      };
     } catch (error) {
       throw new Error(`Error al validar credenciales: ${error.message}`);
     }
