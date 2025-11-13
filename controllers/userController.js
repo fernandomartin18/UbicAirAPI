@@ -120,13 +120,20 @@ class UserController {
    */
   async actualizarUsuario(req, res) {
     try {
-      const { nombre, email } = req.body;
+      const { nombre, email, password, foto } = req.body;
       const datosActualizar = {};
 
       if (nombre) datosActualizar.nombre = nombre;
       if (email) datosActualizar.email = email;
+      if (foto !== undefined) datosActualizar.fotoPerfil = foto;
 
-      const usuario = await userService.actualizarUsuario(req.params.id, datosActualizar);
+      // Si se proporciona una nueva contraseña, actualizarla también
+      let usuario;
+      if (password) {
+        usuario = await userService.actualizarUsuarioConPassword(req.params.id, datosActualizar, password);
+      } else {
+        usuario = await userService.actualizarUsuario(req.params.id, datosActualizar);
+      }
 
       res.status(200).json({
         success: true,

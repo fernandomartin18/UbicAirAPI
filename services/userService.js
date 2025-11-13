@@ -225,6 +225,38 @@ class UserService {
       throw new Error(`Error al actualizar foto de perfil: ${error.message}`);
     }
   }
+
+  /**
+   * Actualizar usuario con nueva contraseña
+   */
+  async actualizarUsuarioConPassword(id, datos, nuevaPassword) {
+    try {
+      const usuario = await User.findById(id);
+      if (!usuario) {
+        throw new Error('Usuario no encontrado');
+      }
+
+      // Validar que la nueva contraseña cumpla con los requisitos
+      if (!nuevaPassword || nuevaPassword.length < 6) {
+        throw new Error('La nueva contraseña debe tener al menos 6 caracteres');
+      }
+
+      // Actualizar datos básicos
+      if (datos.nombre) usuario.nombre = datos.nombre;
+      if (datos.email) usuario.email = datos.email;
+      if (datos.fotoPerfil !== undefined) usuario.fotoPerfil = datos.fotoPerfil;
+      
+      // Actualizar contraseña (se encriptará automáticamente por el middleware pre-save)
+      usuario.password = nuevaPassword;
+      
+      await usuario.save();
+
+      // Devolver usuario sin contraseña
+      return usuario.toJSON();
+    } catch (error) {
+      throw new Error(`Error al actualizar usuario: ${error.message}`);
+    }
+  }
 }
 
 module.exports = new UserService();
