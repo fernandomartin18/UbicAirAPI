@@ -120,7 +120,7 @@ class UserController {
    */
   async actualizarUsuario(req, res) {
     try {
-      const { nombre, email, password, foto } = req.body;
+      const { nombre, email, password, currentPassword, foto } = req.body;
       const datosActualizar = {};
 
       if (nombre) datosActualizar.nombre = nombre;
@@ -130,7 +130,14 @@ class UserController {
       // Si se proporciona una nueva contraseña, actualizarla también
       let usuario;
       if (password) {
-        usuario = await userService.actualizarUsuarioConPassword(req.params.id, datosActualizar, password);
+        // Verificar que se proporcionó la contraseña actual
+        if (!currentPassword) {
+          return res.status(400).json({
+            success: false,
+            error: 'Se requiere la contraseña actual para cambiar la contraseña'
+          });
+        }
+        usuario = await userService.actualizarUsuarioConPassword(req.params.id, datosActualizar, currentPassword, password);
       } else {
         usuario = await userService.actualizarUsuario(req.params.id, datosActualizar);
       }
@@ -141,6 +148,14 @@ class UserController {
         data: usuario
       });
     } catch (error) {
+      // Si el error es de contraseña incorrecta, devolver 401
+      if (error.message.includes('contraseña actual es incorrecta')) {
+        return res.status(401).json({
+          success: false,
+          error: error.message
+        });
+      }
+      
       res.status(400).json({
         success: false,
         error: error.message

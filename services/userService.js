@@ -234,16 +234,32 @@ class UserService {
   /**
    * Actualizar usuario con nueva contraseña
    */
-  async actualizarUsuarioConPassword(id, datos, nuevaPassword) {
+  async actualizarUsuarioConPassword(id, datos, passwordActual, nuevaPassword) {
     try {
       const usuario = await User.findById(id);
       if (!usuario) {
         throw new Error('Usuario no encontrado');
       }
 
+      console.log('Verificando contraseña actual...');
+      console.log('Password ingresada:', passwordActual);
+      
+      // Verificar que la contraseña actual sea correcta
+      const passwordValida = await usuario.compararPassword(passwordActual);
+      console.log('Contraseña válida:', passwordValida);
+      
+      if (!passwordValida) {
+        throw new Error('La contraseña actual es incorrecta');
+      }
+
       // Validar que la nueva contraseña cumpla con los requisitos
       if (!nuevaPassword || nuevaPassword.length < 6) {
         throw new Error('La nueva contraseña debe tener al menos 6 caracteres');
+      }
+
+      // Validar que la nueva contraseña sea diferente a la actual
+      if (passwordActual === nuevaPassword) {
+        throw new Error('La nueva contraseña debe ser diferente a la actual');
       }
 
       // Actualizar solo los campos que se proporcionaron
@@ -256,9 +272,12 @@ class UserService {
       
       await usuario.save();
 
+      console.log('Contraseña actualizada correctamente');
+      
       // Devolver usuario sin contraseña
       return usuario.toJSON();
     } catch (error) {
+      console.error('Error en actualizarUsuarioConPassword:', error.message);
       throw new Error(`Error al actualizar usuario: ${error.message}`);
     }
   }
