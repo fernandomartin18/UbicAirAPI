@@ -246,9 +246,9 @@ class UserService {
         throw new Error('La nueva contraseña debe tener al menos 6 caracteres');
       }
 
-      // Actualizar datos básicos
-      if (datos.nombre) usuario.nombre = datos.nombre;
-      if (datos.email) usuario.email = datos.email;
+      // Actualizar solo los campos que se proporcionaron
+      if (datos.nombre !== undefined) usuario.nombre = datos.nombre;
+      if (datos.email !== undefined) usuario.email = datos.email;
       if (datos.fotoPerfil !== undefined) usuario.fotoPerfil = datos.fotoPerfil;
       
       // Actualizar contraseña (se encriptará automáticamente por el middleware pre-save)
