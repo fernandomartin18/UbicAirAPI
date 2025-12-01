@@ -544,6 +544,148 @@ class VueloService {
   }
 
   /**
+   * Obtener análisis temporal
+   */
+  async obtenerAnalisisTemporal() {
+    try {
+      // Análisis por hora del día
+      const analisisPorHora = await Vuelo.aggregate([
+        {
+          $project: {
+            horaSalida: { $floor: '$DEP_TIME' },
+            horaLlegada: { $floor: '$ARR_TIME' },
+            DEP_DELAY: 1,
+            ARR_DELAY: 1,
+            retrasoTotal: { $add: ['$DEP_DELAY', '$ARR_DELAY'] }
+          }
+        },
+        {
+          $facet: {
+            salidas: [
+              {
+                $group: {
+                  _id: '$horaSalida',
+                  totalVuelos: { $sum: 1 },
+                  retrasoPromedio: { $avg: '$retrasoTotal' }
+                }
+              },
+              { $sort: { _id: 1 } }
+            ],
+            llegadas: [
+              {
+                $group: {
+                  _id: '$horaLlegada',
+                  totalVuelos: { $sum: 1 }
+                }
+              },
+              { $sort: { _id: 1 } }
+            ]
+          }
+        }
+      ]);
+
+      // Combinar datos de salidas y llegadas por hora
+      const salidasMap = new Map();
+      const llegadasMap = new Map();
+      
+      analisisPorHora[0].salidas.forEach(item => {
+        salidasMap.set(item._id, {
+          salidas: item.totalVuelos,
+          retrasoPromedio: parseFloat((item.retrasoPromedio || 0).toFixed(2))
+        });
+      });
+      
+      analisisPorHora[0].llegadas.forEach(item => {
+        llegadasMap.set(item._id, item.totalVuelos);
+      });
+
+      const datosPorHora = [];
+      for (let hora = 0; hora < 24; hora += 2) {
+        const salidas = salidasMap.get(hora) || { salidas: 0, retrasoPromedio: 0 };
+        const llegadas = llegadasMap.get(hora) || 0;
+        
+        datosPorHora.push({
+          hora: `${hora.toString().padStart(2, '0')}:00`,
+          salidas: salidas.salidas,
+          llegadas: llegadas,
+          retrasoPromedio: salidas.retrasoPromedio
+        });
+      }
+
+      // Análisis por día de la semana
+      const analisisSemanal = await Vuelo.aggregate([
+        {
+          $project: {
+            diaSemana: { $dayOfWeek: { $dateFromString: { dateString: '$FL_DATE' } } },
+            DEP_DELAY: 1,
+            ARR_DELAY: 1,
+            retrasoTotal: { $add: ['$DEP_DELAY', '$ARR_DELAY'] }
+          }
+        },
+        {
+          $group: {
+            _id: '$diaSemana',
+            totalVuelos: { $sum: 1 },
+            retrasoPromedio: { $avg: '$retrasoTotal' },
+            vuelosPuntuales: {
+              $sum: {
+                $cond: [{ $lte: ['$retrasoTotal', 0] }, 1, 0]
+              }
+            }
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            diaSemana: '$_id',
+            totalVuelos: 1,
+            retrasoPromedio: { $round: ['$retrasoPromedio', 2] },
+            porcentajePuntualidad: {
+              $round: [
+                {
+                  $multiply: [
+                    { $divide: ['$vuelosPuntuales', '$totalVuelos'] },
+                    100
+                  ]
+                },
+                2
+              ]
+            }
+          }
+        },
+        { $sort: { diaSemana: 1 } }
+      ]);
+
+      const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+      const datosSemana = analisisSemanal.map(item => ({
+        dia: diasSemana[item.diaSemana - 1],
+        totalVuelos: item.totalVuelos,
+        retrasoPromedio: item.retrasoPromedio,
+        porcentajePuntualidad: item.porcentajePuntualidad
+      }));
+
+      // Calcular horas pico
+      const horaPicoSalidas = datosPorHora.reduce((max, item) => 
+        item.salidas > max.salidas ? item : max
+      );
+      const horaPicoLlegadas = datosPorHora.reduce((max, item) => 
+        item.llegadas > max.llegadas ? item : max
+      );
+
+      return {
+        datosPorHora,
+        datosSemana,
+        horasPico: {
+          salidas: horaPicoSalidas.hora,
+          llegadas: horaPicoLlegadas.hora
+        }
+      };
+    } catch (error) {
+      throw new Error(`Error al obtener análisis temporal: ${error.message}`);
+    }
+  }
+
+  /**
    * Construir query para filtros dinámicos
    */
   construirQuery(filters) {

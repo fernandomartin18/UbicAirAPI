@@ -310,6 +310,26 @@ class VueloController {
       });
     }
   }
+
+  /**
+   * GET /api/vuelos/analisis-temporal
+   * Obtener análisis temporal (por hora y día de la semana)
+   */
+  async obtenerAnalisisTemporal(req, res) {
+    try {
+      const analisis = await vueloService.obtenerAnalisisTemporal();
+
+      res.status(200).json({
+        success: true,
+        data: analisis
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
 }
 
 module.exports = new VueloController();
