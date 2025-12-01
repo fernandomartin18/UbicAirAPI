@@ -270,6 +270,26 @@ class VueloController {
       });
     }
   }
+
+  /**
+   * GET /api/vuelos/comparacion-aerolineas
+   * Obtener comparación de aerolíneas
+   */
+  async obtenerComparacionAerolineas(req, res) {
+    try {
+      const comparacion = await vueloService.obtenerComparacionAerolineas();
+
+      res.status(200).json({
+        success: true,
+        data: comparacion
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
 }
 
 module.exports = new VueloController();

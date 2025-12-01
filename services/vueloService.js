@@ -379,6 +379,79 @@ class VueloService {
   }
 
   /**
+   * Obtener comparación de aerolíneas
+   */
+  async obtenerComparacionAerolineas() {
+    try {
+      const comparacion = await Vuelo.aggregate([
+        {
+          $project: {
+            AIRLINE: 1,
+            DEP_DELAY: 1,
+            ARR_DELAY: 1,
+            DISTANCE: 1,
+            AIR_TIME: 1,
+            retrasoTotal: { $add: ['$DEP_DELAY', '$ARR_DELAY'] }
+          }
+        },
+        {
+          $group: {
+            _id: '$AIRLINE',
+            totalVuelos: { $sum: 1 },
+            retrasoPromedioSalida: { $avg: '$DEP_DELAY' },
+            retrasoPromedioLlegada: { $avg: '$ARR_DELAY' },
+            distanciaPromedio: { $avg: '$DISTANCE' },
+            tiempoVueloPromedio: { $avg: '$AIR_TIME' },
+            vuelosPuntuales: {
+              $sum: {
+                $cond: [{ $lte: ['$retrasoTotal', 0] }, 1, 0]
+              }
+            }
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            aerolinea: '$_id',
+            totalVuelos: 1,
+            retrasoPromedioSalida: { $round: ['$retrasoPromedioSalida', 2] },
+            retrasoPromedioLlegada: { $round: ['$retrasoPromedioLlegada', 2] },
+            retrasoPromedio: {
+              $round: [
+                { $avg: ['$retrasoPromedioSalida', '$retrasoPromedioLlegada'] },
+                2
+              ]
+            },
+            distanciaPromedio: { $round: ['$distanciaPromedio', 0] },
+            tiempoVueloPromedio: { $round: ['$tiempoVueloPromedio', 0] },
+            porcentajePuntualidad: {
+              $round: [
+                {
+                  $multiply: [
+                    { $divide: ['$vuelosPuntuales', '$totalVuelos'] },
+                    100
+                  ]
+                },
+                2
+              ]
+            }
+          }
+        },
+        {
+          $sort: { totalVuelos: -1 }
+        },
+        {
+          $limit: 20
+        }
+      ]);
+
+      return comparacion;
+    } catch (error) {
+      throw new Error(`Error al obtener comparación de aerolíneas: ${error.message}`);
+    }
+  }
+
+  /**
    * Construir query para filtros dinámicos
    */
   construirQuery(filters) {

@@ -40,6 +40,13 @@ router.get('/aerolineas', vueloController.obtenerAerolineas);
 router.get('/analisis-retrasos', vueloController.obtenerAnalisisRetrasos);
 
 /**
+ * @route   GET /api/vuelos/comparacion-aerolineas
+ * @desc    Obtener comparación de aerolíneas
+ * @access  Public
+ */
+router.get('/comparacion-aerolineas', vueloController.obtenerComparacionAerolineas);
+
+/**
  * @route   GET /api/vuelos/retrasados
  * @desc    Obtener vuelos con retrasos
  * @query   minutos (retraso mínimo), page, limit
