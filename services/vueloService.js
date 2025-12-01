@@ -452,6 +452,98 @@ class VueloService {
   }
 
   /**
+   * Obtener rutas populares
+   */
+  async obtenerRutasPopulares() {
+    try {
+      // Rutas con mayor tráfico
+      const rutasPopulares = await Vuelo.aggregate([
+        {
+          $project: {
+            ruta: { $concat: ['$ORIGIN', ' → ', '$DEST'] },
+            ORIGIN: 1,
+            DEST: 1,
+            DISTANCE: 1,
+            DEP_DELAY: 1,
+            ARR_DELAY: 1,
+            retrasoTotal: { $add: ['$DEP_DELAY', '$ARR_DELAY'] }
+          }
+        },
+        {
+          $group: {
+            _id: { origen: '$ORIGIN', destino: '$DEST' },
+            ruta: { $first: '$ruta' },
+            totalVuelos: { $sum: 1 },
+            retrasoPromedio: { $avg: { $avg: ['$DEP_DELAY', '$ARR_DELAY'] } },
+            distanciaPromedio: { $avg: '$DISTANCE' },
+            vuelosPuntuales: {
+              $sum: {
+                $cond: [{ $lte: ['$retrasoTotal', 0] }, 1, 0]
+              }
+            }
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            ruta: 1,
+            totalVuelos: 1,
+            retrasoPromedio: { $round: ['$retrasoPromedio', 2] },
+            distancia: { $round: ['$distanciaPromedio', 0] },
+            porcentajePuntualidad: {
+              $round: [
+                {
+                  $multiply: [
+                    { $divide: ['$vuelosPuntuales', '$totalVuelos'] },
+                    100
+                  ]
+                },
+                2
+              ]
+            }
+          }
+        },
+        {
+          $sort: { totalVuelos: -1 }
+        },
+        {
+          $limit: 15
+        }
+      ]);
+
+      // Distribución por distancia
+      const distribucionDistancia = await Vuelo.aggregate([
+        {
+          $bucket: {
+            groupBy: '$DISTANCE',
+            boundaries: [0, 1000, 3000, 6000, 20000],
+            default: 'Otras',
+            output: {
+              totalVuelos: { $sum: 1 }
+            }
+          }
+        }
+      ]);
+
+      const categorias = ['Corta (< 1000 km)', 'Media (1000-3000 km)', 'Larga (3000-6000 km)', 'Ultra Larga (> 6000 km)'];
+      const totalVuelos = distribucionDistancia.reduce((sum, cat) => sum + cat.totalVuelos, 0);
+      
+      const distribucion = distribucionDistancia.map((item, index) => ({
+        categoria: categorias[index] || 'Otras',
+        totalVuelos: item.totalVuelos,
+        porcentaje: parseFloat(((item.totalVuelos / totalVuelos) * 100).toFixed(2))
+      }));
+
+      return {
+        rutasPopulares,
+        distribucionDistancia: distribucion
+      };
+    } catch (error) {
+      throw new Error(`Error al obtener rutas populares: ${error.message}`);
+    }
+  }
+
+  /**
    * Construir query para filtros dinámicos
    */
   construirQuery(filters) {

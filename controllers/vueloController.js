@@ -290,6 +290,26 @@ class VueloController {
       });
     }
   }
+
+  /**
+   * GET /api/vuelos/rutas-populares
+   * Obtener rutas populares y distribución por distancia
+   */
+  async obtenerRutasPopulares(req, res) {
+    try {
+      const rutas = await vueloService.obtenerRutasPopulares();
+
+      res.status(200).json({
+        success: true,
+        data: rutas
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
 }
 
 module.exports = new VueloController();
