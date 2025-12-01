@@ -210,22 +210,138 @@ class VueloService {
     try {
       const stats = await Vuelo.aggregate([
         {
-          $group: {
-            _id: null,
-            totalVuelos: { $sum: 1 },
-            retrasoPromedioSalida: { $avg: '$DEP_DELAY' },
-            retrasoPromedioLlegada: { $avg: '$ARR_DELAY' },
-            tiempoPromedioVuelo: { $avg: '$AIR_TIME' },
-            distanciaPromedio: { $avg: '$DISTANCE' },
-            retrasoMaxSalida: { $max: '$DEP_DELAY' },
-            retrasoMaxLlegada: { $max: '$ARR_DELAY' }
+          $facet: {
+            estadisticasGenerales: [
+              {
+                $group: {
+                  _id: null,
+                  totalVuelos: { $sum: 1 },
+                  retrasoPromedioSalida: { $avg: '$DEP_DELAY' },
+                  retrasoPromedioLlegada: { $avg: '$ARR_DELAY' },
+                  tiempoPromedioVuelo: { $avg: '$AIR_TIME' },
+                  distanciaPromedio: { $avg: '$DISTANCE' },
+                  retrasoMaxSalida: { $max: '$DEP_DELAY' },
+                  retrasoMaxLlegada: { $max: '$ARR_DELAY' }
+                }
+              }
+            ],
+            puntualidad: [
+              {
+                $project: {
+                  retrasoTotal: { $add: ['$DEP_DELAY', '$ARR_DELAY'] }
+                }
+              },
+              {
+                $group: {
+                  _id: null,
+                  totalVuelos: { $sum: 1 },
+                  vuelosPuntuales: {
+                    $sum: { $cond: [{ $lte: ['$retrasoTotal', 0] }, 1, 0] }
+                  }
+                }
+              }
+            ]
           }
         }
       ]);
 
-      return stats[0] || {};
+      const statsData = stats[0].estadisticasGenerales[0] || {};
+      const puntualidadData = stats[0].puntualidad[0] || { totalVuelos: 0, vuelosPuntuales: 0 };
+      
+      statsData.porcentajePuntualidad = puntualidadData.totalVuelos > 0 
+        ? (puntualidadData.vuelosPuntuales / puntualidadData.totalVuelos) * 100 
+        : 0;
+
+      return statsData;
     } catch (error) {
       throw new Error(`Error al obtener estadísticas: ${error.message}`);
+    }
+  }
+
+  /**
+   * Obtener análisis de retrasos
+   */
+  async obtenerAnalisisRetrasos() {
+    try {
+      // Análisis mensual de retrasos (extraer mes desde FL_DATE)
+      const retrasosMensuales = await Vuelo.aggregate([
+        {
+          $project: {
+            mes: { $month: { $dateFromString: { dateString: '$FL_DATE' } } },
+            DEP_DELAY: 1,
+            ARR_DELAY: 1
+          }
+        },
+        {
+          $group: {
+            _id: '$mes',
+            retrasoPromedioSalida: { $avg: '$DEP_DELAY' },
+            retrasoPromedioLlegada: { $avg: '$ARR_DELAY' }
+          }
+        },
+        { $sort: { _id: 1 } }
+      ]);
+
+      // Distribución de retrasos (basado en la suma de DEP_DELAY + ARR_DELAY)
+      const distribucion = await Vuelo.aggregate([
+        {
+          $project: {
+            retrasoTotal: { $add: ['$DEP_DELAY', '$ARR_DELAY'] }
+          }
+        },
+        {
+          $facet: {
+            adelantados: [
+              { $match: { retrasoTotal: { $lt: -15 } } },
+              { $count: 'count' }
+            ],
+            puntualesNegativo: [
+              { $match: { retrasoTotal: { $gte: -15, $lt: 0 } } },
+              { $count: 'count' }
+            ],
+            puntualesPositivo: [
+              { $match: { retrasoTotal: { $gte: 0, $lte: 15 } } },
+              { $count: 'count' }
+            ],
+            retrasoPequeno: [
+              { $match: { retrasoTotal: { $gt: 15, $lte: 30 } } },
+              { $count: 'count' }
+            ],
+            retrasoModerado: [
+              { $match: { retrasoTotal: { $gt: 30, $lte: 60 } } },
+              { $count: 'count' }
+            ],
+            retrasoGrande: [
+              { $match: { retrasoTotal: { $gt: 60 } } },
+              { $count: 'count' }
+            ]
+          }
+        }
+      ]);
+
+      const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+      const retrasosPorMes = retrasosMensuales.map(item => ({
+        mes: meses[item._id - 1] || `Mes ${item._id}`,
+        retrasoPromedioSalida: parseFloat((item.retrasoPromedioSalida || 0).toFixed(2)),
+        retrasoPromedioLlegada: parseFloat((item.retrasoPromedioLlegada || 0).toFixed(2))
+      }));
+
+      const dist = distribucion[0];
+      const distribucionRetrasos = [
+        { rango: '-30 a -15 min', cantidad: dist.adelantados[0]?.count || 0 },
+        { rango: '-15 a 0 min', cantidad: dist.puntualesNegativo[0]?.count || 0 },
+        { rango: '0-15 min', cantidad: dist.puntualesPositivo[0]?.count || 0 },
+        { rango: '15-30 min', cantidad: dist.retrasoPequeno[0]?.count || 0 },
+        { rango: '30-60 min', cantidad: dist.retrasoModerado[0]?.count || 0 },
+        { rango: '60+ min', cantidad: dist.retrasoGrande[0]?.count || 0 }
+      ];
+
+      return {
+        retrasosPorMes,
+        distribucionRetrasos
+      };
+    } catch (error) {
+      throw new Error(`Error al obtener análisis de retrasos: ${error.message}`);
     }
   }
 

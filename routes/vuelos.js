@@ -33,6 +33,13 @@ router.get('/aeropuertos', vueloController.obtenerAeropuertos);
 router.get('/aerolineas', vueloController.obtenerAerolineas);
 
 /**
+ * @route   GET /api/vuelos/analisis-retrasos
+ * @desc    Obtener análisis de retrasos (mensual y distribución)
+ * @access  Public
+ */
+router.get('/analisis-retrasos', vueloController.obtenerAnalisisRetrasos);
+
+/**
  * @route   GET /api/vuelos/retrasados
  * @desc    Obtener vuelos con retrasos
  * @query   minutos (retraso mínimo), page, limit

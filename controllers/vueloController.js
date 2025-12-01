@@ -250,6 +250,26 @@ class VueloController {
       });
     }
   }
+
+  /**
+   * GET /api/vuelos/analisis-retrasos
+   * Obtener análisis de retrasos (mensual y distribución)
+   */
+  async obtenerAnalisisRetrasos(req, res) {
+    try {
+      const analisis = await vueloService.obtenerAnalisisRetrasos();
+
+      res.status(200).json({
+        success: true,
+        data: analisis
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
 }
 
 module.exports = new VueloController();
