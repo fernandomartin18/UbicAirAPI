@@ -11,8 +11,9 @@ class VueloController {
   async obtenerVuelos(req, res) {
     try {
       const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 10;
+      const limit = parseInt(req.query.limit) || 1000;
       const filters = {
+        search: req.query.search,
         origen: req.query.origen,
         destino: req.query.destino,
         aerolinea: req.query.aerolinea,

@@ -10,12 +10,16 @@ class VueloService {
   async obtenerTodosLosVuelos(page = 1, limit = 10, filters = {}) {
     try {
       const skip = (page - 1) * limit;
+      console.log('Filtros recibidos:', filters);
       const query = this.construirQuery(filters);
+      console.log('Query final:', JSON.stringify(query));
 
       const vuelos = await Vuelo.find(query)
         .limit(limit)
         .skip(skip)
         .lean();
+
+      console.log('Vuelos encontrados:', vuelos.length);
 
       const total = await Vuelo.countDocuments(query);
 
@@ -691,12 +695,24 @@ class VueloService {
   construirQuery(filters) {
     const query = {};
 
-    if (filters.origen) {
-      query.ORIGIN = filters.origen.toUpperCase();
-    }
+    // Si se proporciona search, buscar en origen O destino
+    if (filters.search) {
+      const searchUpper = filters.search.toUpperCase();
+      console.log('Búsqueda con:', searchUpper);
+      query.$or = [
+        { ORIGIN: { $regex: searchUpper, $options: 'i' } },
+        { DEST: { $regex: searchUpper, $options: 'i' } }
+      ];
+      console.log('Query construida:', JSON.stringify(query));
+    } else {
+      // Filtros individuales (comportamiento original)
+      if (filters.origen) {
+        query.ORIGIN = filters.origen.toUpperCase();
+      }
 
-    if (filters.destino) {
-      query.DEST = filters.destino.toUpperCase();
+      if (filters.destino) {
+        query.DEST = filters.destino.toUpperCase();
+      }
     }
 
     if (filters.aerolinea) {
@@ -708,10 +724,24 @@ class VueloService {
     }
 
     if (filters.retrasoMin) {
-      query.$or = [
-        { DEP_DELAY: { $gte: parseInt(filters.retrasoMin) } },
-        { ARR_DELAY: { $gte: parseInt(filters.retrasoMin) } }
-      ];
+      if (query.$or) {
+        // Si ya existe $or, agregamos las condiciones en un $and
+        query.$and = [
+          { $or: query.$or },
+          {
+            $or: [
+              { DEP_DELAY: { $gte: parseInt(filters.retrasoMin) } },
+              { ARR_DELAY: { $gte: parseInt(filters.retrasoMin) } }
+            ]
+          }
+        ];
+        delete query.$or;
+      } else {
+        query.$or = [
+          { DEP_DELAY: { $gte: parseInt(filters.retrasoMin) } },
+          { ARR_DELAY: { $gte: parseInt(filters.retrasoMin) } }
+        ];
+      }
     }
 
     return query;
