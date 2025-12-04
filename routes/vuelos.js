@@ -33,6 +33,34 @@ router.get('/aeropuertos', vueloController.obtenerAeropuertos);
 router.get('/aerolineas', vueloController.obtenerAerolineas);
 
 /**
+ * @route   GET /api/vuelos/analisis-retrasos
+ * @desc    Obtener análisis de retrasos (mensual y distribución)
+ * @access  Public
+ */
+router.get('/analisis-retrasos', vueloController.obtenerAnalisisRetrasos);
+
+/**
+ * @route   GET /api/vuelos/comparacion-aerolineas
+ * @desc    Obtener comparación de aerolíneas
+ * @access  Public
+ */
+router.get('/comparacion-aerolineas', vueloController.obtenerComparacionAerolineas);
+
+/**
+ * @route   GET /api/vuelos/rutas-populares
+ * @desc    Obtener rutas populares y distribución por distancia
+ * @access  Public
+ */
+router.get('/rutas-populares', vueloController.obtenerRutasPopulares);
+
+/**
+ * @route   GET /api/vuelos/analisis-temporal
+ * @desc    Obtener análisis temporal (por hora y día de la semana)
+ * @access  Public
+ */
+router.get('/analisis-temporal', vueloController.obtenerAnalisisTemporal);
+
+/**
  * @route   GET /api/vuelos/retrasados
  * @desc    Obtener vuelos con retrasos
  * @query   minutos (retraso mínimo), page, limit

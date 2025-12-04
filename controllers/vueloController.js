@@ -11,8 +11,9 @@ class VueloController {
   async obtenerVuelos(req, res) {
     try {
       const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 10;
+      const limit = parseInt(req.query.limit) || 1000;
       const filters = {
+        search: req.query.search,
         origen: req.query.origen,
         destino: req.query.destino,
         aerolinea: req.query.aerolinea,
@@ -242,6 +243,86 @@ class VueloController {
       res.status(200).json({
         success: true,
         data: aerolineas
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * GET /api/vuelos/analisis-retrasos
+   * Obtener análisis de retrasos (mensual y distribución)
+   */
+  async obtenerAnalisisRetrasos(req, res) {
+    try {
+      const analisis = await vueloService.obtenerAnalisisRetrasos();
+
+      res.status(200).json({
+        success: true,
+        data: analisis
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * GET /api/vuelos/comparacion-aerolineas
+   * Obtener comparación de aerolíneas
+   */
+  async obtenerComparacionAerolineas(req, res) {
+    try {
+      const comparacion = await vueloService.obtenerComparacionAerolineas();
+
+      res.status(200).json({
+        success: true,
+        data: comparacion
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * GET /api/vuelos/rutas-populares
+   * Obtener rutas populares y distribución por distancia
+   */
+  async obtenerRutasPopulares(req, res) {
+    try {
+      const rutas = await vueloService.obtenerRutasPopulares();
+
+      res.status(200).json({
+        success: true,
+        data: rutas
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * GET /api/vuelos/analisis-temporal
+   * Obtener análisis temporal (por hora y día de la semana)
+   */
+  async obtenerAnalisisTemporal(req, res) {
+    try {
+      const analisis = await vueloService.obtenerAnalisisTemporal();
+
+      res.status(200).json({
+        success: true,
+        data: analisis
       });
     } catch (error) {
       res.status(500).json({
