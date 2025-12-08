@@ -31,4 +31,13 @@ router.put('/:id/password', verificarToken, userController.cambiarPassword.bind(
 // PUT /api/users/:id/foto-perfil - Actualizar foto de perfil - Protegida
 router.put('/:id/foto-perfil', verificarToken, userController.actualizarFotoPerfil.bind(userController));
 
+// GET /api/users/:id/favorites - Obtener favoritos del usuario - Protegida
+router.get('/:id/favorites', verificarToken, userController.obtenerFavoritos.bind(userController));
+
+// POST /api/users/:id/favorites - Agregar vuelo a favoritos - Protegida
+router.post('/:id/favorites', verificarToken, userController.agregarFavorito.bind(userController));
+
+// DELETE /api/users/:id/favorites - Eliminar vuelo de favoritos - Protegida
+router.delete('/:id/favorites', verificarToken, userController.eliminarFavorito.bind(userController));
+
 module.exports = router;
