@@ -26,4 +26,10 @@ router.get('/stats', telemetriaController.obtenerEstadisticas);
 // DELETE /api/telemetry/clean - Limpiar telemetría antigua (Protegida)
 router.delete('/clean', verificarToken, telemetriaController.limpiarTelemetriaAntigua);
 
+// DELETE /api/telemetry/flight/:flightId - Eliminar telemetría de un vuelo específico (Pública)
+router.delete('/flight/:flightId', telemetriaController.eliminarVuelo);
+
+// DELETE /api/telemetry/all - Eliminar toda la telemetría (Pública para el simulador)
+router.delete('/all', telemetriaController.eliminarTodaLaTelemetria);
+
 module.exports = router;

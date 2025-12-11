@@ -72,14 +72,15 @@ telemetriaSchema.statics.getRecentTelemetry = function(flightId, limit = 10) {
     .limit(limit);
 };
 
-// Método estático para obtener todos los vuelos activos (últimos 10 minutos)
+// Método estático para obtener todos los vuelos activos (últimos 5 minutos y progreso < 98%)
 telemetriaSchema.statics.getActiveFlights = function() {
-  const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+  const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
   
   return this.aggregate([
     {
       $match: {
-        timestamp: { $gte: tenMinutesAgo }
+        timestamp: { $gte: fiveMinutesAgo },
+        progress: { $lt: 98 } // Filtrar temprano para mayor eficiencia
       }
     },
     {

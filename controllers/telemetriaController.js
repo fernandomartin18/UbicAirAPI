@@ -209,6 +209,56 @@ class TelemetriaController {
       });
     }
   }
+
+  /**
+   * DELETE /api/telemetry/flight/:flightId
+   * Elimina toda la telemetría de un vuelo específico
+   */
+  async eliminarVuelo(req, res) {
+    try {
+      const { flightId } = req.params;
+
+      const resultado = await Telemetria.deleteMany({ flightId });
+
+      res.json({
+        success: true,
+        message: `Telemetría del vuelo ${flightId} eliminada correctamente`,
+        deletedCount: resultado.deletedCount
+      });
+
+    } catch (error) {
+      console.error('Error al eliminar vuelo:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error al eliminar vuelo',
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * DELETE /api/telemetry/all
+   * Elimina toda la telemetría (usado al iniciar el simulador)
+   */
+  async eliminarTodaLaTelemetria(req, res) {
+    try {
+      const resultado = await Telemetria.deleteMany({});
+
+      res.json({
+        success: true,
+        message: 'Toda la telemetría ha sido eliminada',
+        deletedCount: resultado.deletedCount
+      });
+
+    } catch (error) {
+      console.error('Error al eliminar telemetría:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error al eliminar telemetría',
+        error: error.message
+      });
+    }
+  }
 }
 
 module.exports = new TelemetriaController();
