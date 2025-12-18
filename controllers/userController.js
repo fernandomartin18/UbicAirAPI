@@ -274,6 +274,99 @@ class UserController {
       });
     }
   }
+
+  /**
+   * GET /api/users/:id/favorites
+   * Obtener favoritos de un usuario
+   */
+  async obtenerFavoritos(req, res) {
+    try {
+      const favoritos = await userService.obtenerFavoritos(req.params.id);
+
+      res.status(200).json({
+        success: true,
+        data: {
+          favorites: favoritos
+        }
+      });
+    } catch (error) {
+      res.status(404).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * POST /api/users/:id/favorites
+   * Añadir un vuelo a favoritos
+   */
+  async agregarFavorito(req, res) {
+    try {
+      const { flight } = req.body;
+
+      if (!flight) {
+        return res.status(400).json({
+          success: false,
+          error: 'Se requiere la información del vuelo'
+        });
+      }
+
+      const favoritos = await userService.agregarFavorito(req.params.id, flight);
+
+      res.status(200).json({
+        success: true,
+        message: 'Vuelo añadido a favoritos',
+        data: {
+          favorites: favoritos
+        }
+      });
+    } catch (error) {
+      if (error.message.includes('ya está en favoritos')) {
+        return res.status(409).json({
+          success: false,
+          error: error.message
+        });
+      }
+
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * DELETE /api/users/:id/favorites
+   * Eliminar un vuelo de favoritos
+   */
+  async eliminarFavorito(req, res) {
+    try {
+      const { flight } = req.body;
+
+      if (!flight) {
+        return res.status(400).json({
+          success: false,
+          error: 'Se requiere la información del vuelo'
+        });
+      }
+
+      const favoritos = await userService.eliminarFavorito(req.params.id, flight);
+
+      res.status(200).json({
+        success: true,
+        message: 'Vuelo eliminado de favoritos',
+        data: {
+          favorites: favoritos
+        }
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
 }
 
 module.exports = new UserController();
