@@ -281,6 +281,84 @@ class UserService {
       throw new Error(`Error al actualizar usuario: ${error.message}`);
     }
   }
+
+  /**
+   * Obtener favoritos de un usuario
+   */
+  async obtenerFavoritos(userId) {
+    try {
+      const usuario = await User.findById(userId).select('favoritos');
+      if (!usuario) {
+        throw new Error('Usuario no encontrado');
+      }
+      return usuario.favoritos || [];
+    } catch (error) {
+      throw new Error(`Error al obtener favoritos: ${error.message}`);
+    }
+  }
+
+  /**
+   * Añadir un vuelo a favoritos
+   */
+  async agregarFavorito(userId, vuelo) {
+    try {
+      const usuario = await User.findById(userId);
+      if (!usuario) {
+        throw new Error('Usuario no encontrado');
+      }
+
+      // Verificar si el vuelo ya está en favoritos
+      const yaExiste = usuario.favoritos.some(fav => {
+        const favDate = new Date(fav.FL_DATE).toISOString().split('T')[0];
+        const flightDate = new Date(vuelo.FL_DATE).toISOString().split('T')[0];
+        return fav.ORIGIN === vuelo.ORIGIN && 
+               fav.DEST === vuelo.DEST && 
+               fav.AIRLINE === vuelo.AIRLINE &&
+               favDate === flightDate;
+      });
+
+      if (yaExiste) {
+        throw new Error('Este vuelo ya está en favoritos');
+      }
+
+      // Añadir el vuelo a favoritos
+      usuario.favoritos.push(vuelo);
+      await usuario.save();
+
+      return usuario.favoritos;
+    } catch (error) {
+      throw new Error(`Error al agregar favorito: ${error.message}`);
+    }
+  }
+
+  /**
+   * Eliminar un vuelo de favoritos
+   */
+  async eliminarFavorito(userId, vuelo) {
+    try {
+      const usuario = await User.findById(userId);
+      if (!usuario) {
+        throw new Error('Usuario no encontrado');
+      }
+
+      // Buscar y eliminar el vuelo de favoritos
+      const flightDate = new Date(vuelo.FL_DATE).toISOString().split('T')[0];
+      
+      usuario.favoritos = usuario.favoritos.filter(fav => {
+        const favDate = new Date(fav.FL_DATE).toISOString().split('T')[0];
+        return !(fav.ORIGIN === vuelo.ORIGIN && 
+                 fav.DEST === vuelo.DEST && 
+                 fav.AIRLINE === vuelo.AIRLINE &&
+                 favDate === flightDate);
+      });
+
+      await usuario.save();
+
+      return usuario.favoritos;
+    } catch (error) {
+      throw new Error(`Error al eliminar favorito: ${error.message}`);
+    }
+  }
 }
 
 module.exports = new UserService();

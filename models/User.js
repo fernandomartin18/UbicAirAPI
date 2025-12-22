@@ -25,6 +25,21 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  favoritos: {
+    type: [{
+      ORIGIN: String,
+      DEST: String,
+      AIRLINE: String,
+      FL_DATE: Date,
+      DEP_TIME: Number,
+      ARR_TIME: Number,
+      AIR_TIME: Number,
+      DISTANCE: Number,
+      DEP_DELAY: Number,
+      ARR_DELAY: Number
+    }],
+    default: []
+  },
   fechaRegistro: {
     type: Date,
     default: Date.now

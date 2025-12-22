@@ -9,6 +9,7 @@ const connectDB = require('./config/database');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var vuelosRouter = require('./routes/vuelos');
+var telemetriaRouter = require('./routes/telemetria');
 
 var app = express();
 
@@ -25,5 +26,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/vuelos', vuelosRouter);
+app.use('/api/telemetry', telemetriaRouter);
+
+// Ruta directa para login (alias de /api/users/login)
+// Para compatibilidad con el simulador IoT
+const userController = require('./controllers/userController');
+app.post('/api/login', userController.loginUsuario.bind(userController));
 
 module.exports = app;
